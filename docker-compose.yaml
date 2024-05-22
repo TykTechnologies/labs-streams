@@ -2,14 +2,12 @@ version: '3.8'
 
 services:
 
-  redis:
+  labs-redis:
     image: redis:6.2.5
     ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
+      - "1379:6379"
 
-  nats:
+  labs-nats:
     image: nats:2.10.14
     restart: always
     ports:
@@ -18,5 +16,5 @@ services:
       - "8222:8222"
     command:
       - "-js"
-    volumes:
-      - nats_data:/tmp/nats/jetstream
+#    volumes:
+#      - nats_data:/tmp/nats/jetstream

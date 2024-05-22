@@ -1,0 +1,20 @@
+input:
+  label: ''
+  redis_streams:
+    auto_replay_nacks: true
+    body_key: body
+    client_id: test
+    consumer_group: test
+    streams:
+      - AMZN
+    url: redis://:1379
+output:
+#  http_server:
+#    allowed_verbs:
+#      - GET
+#    consumer_group: test
+#    path: /amzn
+#    stream_path: /stream
+#    ws_path: /subscribe
+  stdout:
+    codec: lines
