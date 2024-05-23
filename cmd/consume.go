@@ -6,13 +6,12 @@ import (
 	"log"
 
 	"github.com/redis/go-redis/v9"
-
 	"github.com/spf13/cobra"
 )
 
 // consumerCmd represents the consumer command
 var consumerCmd = &cobra.Command{
-	Use:   "consumer",
+	Use:   "consume",
 	Short: "Consumes from a stream to STDIO",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
