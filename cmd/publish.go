@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/IBM/sarama"
 	"github.com/TykTechnologies/labs-streams/model"
 	"github.com/redis/go-redis/v9"
 	"github.com/spf13/cobra"
@@ -34,6 +35,9 @@ var publisherCmd = &cobra.Command{
 		var feedSlice []*model.PM
 		json.Unmarshal(feedBytes, &feedSlice)
 
+		//signals := make(chan os.Signal, 1)
+		//signal.Notify(signals, os.Interrupt)
+
 		switch to {
 		case "redis":
 			fmt.Println("publishing to Redis stream")
@@ -41,11 +45,65 @@ var publisherCmd = &cobra.Command{
 			if err != nil {
 				log.Fatal("error publishing to Redis", err.Error())
 			}
+		case "kafka":
+			fmt.Println("publishing to Kafka")
+			err := toKafka(feedSlice)
+			if err != nil {
+				log.Fatal("error publishing to Kafka", err.Error())
+			}
 		default:
 			log.Fatal("unsupported destination", to)
 		}
 
 	},
+}
+
+func toKafka(feedSlice []*model.PM) error {
+	config := sarama.NewConfig()
+	config.Producer.Return.Errors = true
+	config.Producer.Return.Successes = true
+	producer, err := sarama.NewSyncProducer([]string{"localhost:9093"}, config)
+	if err != nil {
+		return err
+	}
+	defer producer.Close()
+
+	for _, tick := range feedSlice {
+		r := rand.Intn(10)
+		time.Sleep(time.Duration(r) * time.Millisecond * 100)
+
+		t := model.Tick{
+			Price1000: int(tick.V[0] * 1000),
+		}
+
+		payload := map[string]interface{}{
+			"price_1000": t.Price1000,
+			"timestamp":  time.Now().Unix(),
+		}
+
+		payloadBytes, _ := json.Marshal(payload)
+		fmt.Println(string(payloadBytes))
+
+		message := &sarama.ProducerMessage{
+			Topic: fmt.Sprintf("instrument.%s", instrument),
+			Value: sarama.ByteEncoder(payloadBytes),
+		}
+
+		//producer.Input() <- message
+
+		//select {
+		//case success := <-producer.Successes():
+		//
+		//case errMsg := <-producer.Errors():
+		//
+		//}
+		_, _, err := producer.SendMessage(message)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func toRedis(feedSlice []*model.PM) error {
