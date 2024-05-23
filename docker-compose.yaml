@@ -31,6 +31,7 @@ services:
     image: docker.io/bitnami/kafka:3.3
     ports:
       - "9093:9093"
+      - "9092:9092"
     volumes:
       - "kafka-data:/bitnami"
     environment:

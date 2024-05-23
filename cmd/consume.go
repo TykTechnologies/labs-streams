@@ -1,11 +1,10 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"log"
 
-	"github.com/redis/go-redis/v9"
+	"github.com/IBM/sarama"
 	"github.com/spf13/cobra"
 )
 
@@ -17,21 +16,35 @@ var consumerCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("consumer called")
 
-		rdb := redis.NewClient(&redis.Options{
-			Addr:             "localhost:1379",
-			Password:         "",
-			DB:               0,
-			DisableIndentity: true, // Disable set-info on connect
-		})
-		_, err := rdb.Ping(context.Background()).Result()
+		consumer, err := sarama.NewConsumer([]string{"localhost:9093"}, nil)
 		if err != nil {
-			log.Fatal("Unbale to connect to Redis", err.Error())
+			log.Fatal("error creating consumer", err.Error())
 		}
 
-		//ctx := context.Background()
-		//
-		//subject := "AMZN"
+		topic := "instrument.AMZN"
+		partition := 0
 
+		pc, err := consumer.ConsumePartition(topic, int32(partition), sarama.OffsetNewest)
+		if err != nil {
+			log.Fatal("error creating partition consumer", err.Error())
+		}
+
+		msgs := make(chan *sarama.ConsumerMessage)
+		go func() {
+			for {
+				select {
+				case msg := <-msgs:
+					fmt.Printf("Consumed message: %s\n", string(msg.Value))
+				}
+			}
+		}()
+
+		for {
+			select {
+			case msg := <-pc.Messages():
+				msgs <- msg
+			}
+		}
 	},
 }
 
