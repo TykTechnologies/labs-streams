@@ -2,10 +2,10 @@ version: '3.8'
 
 services:
 
-  labs-redis:
-    image: redis:6.2.5
-    ports:
-      - "1379:6379"
+#  labs-redis:
+#    image: redis:6.2.5
+#    ports:
+#      - "1379:6379"
 
   labs-nats:
     image: nats:2.10.14
@@ -16,5 +16,34 @@ services:
       - "8222:8222"
     command:
       - "-js"
-#    volumes:
+
+  labs-zookeeper:
+    restart: always
+    image: docker.io/bitnami/zookeeper:3.8
+    ports:
+      - "2181:2181"
+    volumes:
+      - "zookeeper-data:/bitnami"
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+  labs-kafka:
+    restart: always
+    image: docker.io/bitnami/kafka:3.3
+    ports:
+      - "9093:9093"
+    volumes:
+      - "kafka-data:/bitnami"
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka:9092,EXTERNAL://localhost:9093
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=CLIENT
+    depends_on:
+      - labs-zookeeper
+volumes:
+  kafka-data:
+  zookeeper-data:
 #      - nats_data:/tmp/nats/jetstream
