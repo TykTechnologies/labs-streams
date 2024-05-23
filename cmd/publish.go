@@ -136,7 +136,7 @@ func toRedis(feedSlice []*model.PM) error {
 		fmt.Println(string(payloadBytes))
 
 		err = rdb.XAdd(ctx, &redis.XAddArgs{
-			Stream: instrument,
+			Stream: fmt.Sprintf("instrument.%s", instrument),
 			MaxLen: 0,
 			ID:     "",
 			Values: payload,
