@@ -1,0 +1,17 @@
+input:
+  kafka:
+    addresses:
+      - localhost:9093
+    auto_replay_nacks: true
+    checkpoint_limit: 1024
+    consumer_group: benthos
+    target_version: 3.3.0
+    topics:
+      - instrument.AMZN
+output:
+  http_server:
+    allowed_verbs:
+      - GET
+    path: /instruments
+    stream_path: /instruments/stream
+    ws_path: /instruments/subscribe
