@@ -1,0 +1,17 @@
+input:
+  generate:
+    interval: '10s'
+    mapping: 'root = {"test":"message","id":uuid_v4()}'
+output:
+  broker:
+    pattern: fan_out
+    outputs:
+      - stdout:
+          codec: lines
+      - http_server:
+          path: /get
+          stream_path: /get/stream
+          ws_path: /get/ws
+          allowed_verbs:
+            - GET
+          timeout: 11s
