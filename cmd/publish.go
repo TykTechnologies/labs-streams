@@ -11,6 +11,7 @@ import (
 
 	"github.com/IBM/sarama"
 	"github.com/TykTechnologies/labs-streams/model"
+	"github.com/linkedin/goavro"
 	"github.com/redis/go-redis/v9"
 	"github.com/spf13/cobra"
 )
@@ -18,6 +19,7 @@ import (
 var (
 	to         string
 	instrument string
+	format     string
 )
 
 var publisherCmd = &cobra.Command{
@@ -54,7 +56,6 @@ var publisherCmd = &cobra.Command{
 		default:
 			log.Fatal("unsupported destination", to)
 		}
-
 	},
 }
 
@@ -68,6 +69,14 @@ func toKafka(feedSlice []*model.PM) error {
 	}
 	defer producer.Close()
 
+	schema, err := os.ReadFile("./model/tick.avsc")
+	if err != nil {
+		return err
+	}
+	codec, err := goavro.NewCodec(string(schema))
+	if err != nil {
+		return err
+	}
 	for _, tick := range feedSlice {
 		r := rand.Intn(10)
 		time.Sleep(time.Duration(r) * time.Millisecond * 100)
@@ -81,23 +90,25 @@ func toKafka(feedSlice []*model.PM) error {
 			"timestamp":  time.Now().Unix(),
 		}
 
+		binary, err := codec.BinaryFromNative(nil, payload)
+
 		payloadBytes, _ := json.Marshal(payload)
-		fmt.Println(string(payloadBytes))
 
 		message := &sarama.ProducerMessage{
 			Topic: fmt.Sprintf("instrument.%s", instrument),
-			Value: sarama.ByteEncoder(payloadBytes),
 		}
+		switch format {
+		case "json":
+			message.Value = sarama.ByteEncoder(payloadBytes)
+			fmt.Println(string(payloadBytes))
+		case "avro":
+			message.Value = sarama.ByteEncoder(binary)
 
-		//producer.Input() <- message
-
-		//select {
-		//case success := <-producer.Successes():
-		//
-		//case errMsg := <-producer.Errors():
-		//
-		//}
-		_, _, err := producer.SendMessage(message)
+			native, _, _ := codec.NativeFromBinary(binary)
+			textual, _ := codec.TextualFromNative(nil, native)
+			fmt.Println("AVRO:", string(textual))
+		}
+		_, _, err = producer.SendMessage(message)
 		if err != nil {
 			return err
 		}
@@ -152,4 +163,5 @@ func init() {
 	rootCmd.AddCommand(publisherCmd)
 	rootCmd.PersistentFlags().StringVar(&to, "to", "redis", "where the publisher should publish to")
 	rootCmd.PersistentFlags().StringVar(&instrument, "instrument", "AMZN", "the instrument to publish")
+	rootCmd.PersistentFlags().StringVar(&format, "format", "json", "the format to publish in")
 }

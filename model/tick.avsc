@@ -1,0 +1,15 @@
+{
+  "type": "record",
+  "name": "Tick",
+  "namespace": "com.example.instrument",
+  "fields": [
+    {
+      "name": "price_1000",
+      "type": "double"
+    },
+    {
+      "name": "timestamp",
+      "type": "long"
+    }
+  ]
+}
