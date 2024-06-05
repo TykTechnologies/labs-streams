@@ -94,19 +94,21 @@ func toKafka(feedSlice []*model.PM) error {
 
 		payloadBytes, _ := json.Marshal(payload)
 
+		topic := fmt.Sprintf("instrument.%s.%s", format, instrument)
+
 		message := &sarama.ProducerMessage{
-			Topic: fmt.Sprintf("instrument.%s", instrument),
+			Topic: topic,
 		}
 		switch format {
 		case "json":
 			message.Value = sarama.ByteEncoder(payloadBytes)
-			fmt.Println(string(payloadBytes))
+			fmt.Println(topic, string(payloadBytes))
 		case "avro":
 			message.Value = sarama.ByteEncoder(binary)
 
 			native, _, _ := codec.NativeFromBinary(binary)
 			textual, _ := codec.TextualFromNative(nil, native)
-			fmt.Println("AVRO:", string(textual))
+			fmt.Println(topic, string(textual))
 		}
 		_, _, err = producer.SendMessage(message)
 		if err != nil {

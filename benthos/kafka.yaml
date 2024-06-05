@@ -7,7 +7,7 @@ input:
     consumer_group: benthos
     target_version: 3.3.0
     topics:
-      - instrument.AMZN
+      - instrument.json.AMZN
 output:
   http_server:
     allowed_verbs:
