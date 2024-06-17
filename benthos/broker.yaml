@@ -1,0 +1,56 @@
+input:
+  broker:
+    inputs:
+      - kafka:
+          addresses:
+            - localhost:9093
+          auto_replay_nacks: true
+          checkpoint_limit: 1024
+          consumer_group: cg_json
+          target_version: 3.3.0
+          topics:
+            - instrument.json.AMZN
+      - kafka:
+          addresses:
+            - localhost:9093
+          auto_replay_nacks: true
+          checkpoint_limit: 1024
+          consumer_group: cg_avro
+          target_version: 3.3.0
+          topics:
+            - instrument.avro.GOOG
+pipeline:
+  processors:
+    - switch:
+        - check: 'meta("kafka_topic").contains(".avro.")'
+          processors:
+            - avro:
+                operator: to_json
+                encoding: binary
+                schema: |
+                  {
+                  "type": "record",
+                  "name": "Tick",
+                  "namespace": "com.example.instrument",
+                  "fields": [
+                      {
+                      "name": "instrument",
+                      "type": "string"
+                      },
+                      {
+                      "name": "price_1000",
+                      "type": "double"
+                      },
+                      {
+                      "name": "timestamp",
+                      "type": "long"
+                      }
+                  ]
+                  }
+output:
+  http_server:
+    allowed_verbs:
+      - GET
+    path: /instruments
+    stream_path: /instruments/stream
+    ws_path: /instruments/subscribe

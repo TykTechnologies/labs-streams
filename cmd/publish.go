@@ -86,6 +86,7 @@ func toKafka(feedSlice []*model.PM) error {
 		}
 
 		payload := map[string]interface{}{
+			"instrument": instrument,
 			"price_1000": t.Price1000,
 			"timestamp":  time.Now().Unix(),
 		}

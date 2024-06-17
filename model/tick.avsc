@@ -4,6 +4,10 @@
   "namespace": "com.example.instrument",
   "fields": [
     {
+      "name": "instrument",
+      "type": "string"
+    },
+    {
       "name": "price_1000",
       "type": "double"
     },

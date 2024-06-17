@@ -1,5 +1,6 @@
 input:
   kafka:
+    id: avro
     addresses:
       - localhost:9093
     auto_replay_nacks: true
@@ -10,10 +11,32 @@ input:
       - instrument.avro.AMZN
 pipeline:
   processors:
-    - avro:
-        operator: to_json
-        schema_path: "file:///Users/asoorm/go/src/github.com/TykTechnologies/labs-streams/model/tick.avsc"
-        encoding: binary
+    - switch:
+        check: 'meta("kafka_topic") == "instrument.avro.AMZN"'
+        processors:
+            - avro:
+                operator: to_json
+                encoding: binary
+                schema: |
+                    {
+                    "type": "record",
+                    "name": "Tick",
+                    "namespace": "com.example.instrument",
+                    "fields": [
+                        {
+                        "name": "instrument",
+                        "type": "string"
+                        },
+                        {
+                        "name": "price_1000",
+                        "type": "double"
+                        },
+                        {
+                        "name": "timestamp",
+                        "type": "long"
+                        }
+                    ]
+                    }
 output:
   http_server:
     allowed_verbs:
