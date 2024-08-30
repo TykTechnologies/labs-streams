@@ -1,0 +1,27 @@
+input:
+  generate:
+    interval: '10s'
+    mapping: 'root = {"test":"message","id":uuid_v4()}'
+pipeline:
+  processors:
+    - sql_raw:
+        driver: mysql
+        dsn: user:pass@tcp(localhost:3306)/database?charset=utf8mb4&parseTime=true&loc=Local
+        query: "SELECT COUNT(*) as number_of_sales FROM foo;"
+        exec_only: false
+#    - result_map: 'root.number_of_sales = this'
+    - bloblang: |
+        root = this.query_result[0]
+output:
+  broker:
+    pattern: fan_out
+    outputs:
+      - stdout:
+          codec: lines
+      - http_server:
+          path: /get
+          stream_path: /get/stream
+          ws_path: /get/ws
+          allowed_verbs:
+            - GET
+          timeout: 11s
