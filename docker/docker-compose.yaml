@@ -48,3 +48,7 @@ volumes:
   kafka-data:
   zookeeper-data:
 #      - nats_data:/tmp/nats/jetstream
+
+networks:
+  tyk:
+    external: true

@@ -15,3 +15,4 @@ output:
     path: /instruments
     stream_path: /instruments/stream
     ws_path: /instruments/subscribe
+    consumer_group: $tyk_context.request_id

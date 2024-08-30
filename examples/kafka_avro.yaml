@@ -1,0 +1,47 @@
+input:
+  kafka:
+    id: avro
+    addresses:
+      - localhost:9093
+    auto_replay_nacks: true
+    checkpoint_limit: 1024
+    consumer_group: tyk
+    target_version: 3.3.0
+    topics:
+      - instrument.avro.AMZN
+      - instrument.json.GOOG
+pipeline:
+  processors:
+    - switch:
+      check: 'meta("kafka_topic").contains("avro")'
+      processors:
+        - avro:
+            operator: to_json
+            encoding: binary
+            schema: |
+              {
+                "type": "record",
+                "name": "Tick",
+                "namespace": "com.example.instrument",
+                "fields": [
+                  {
+                  "name": "instrument",
+                  "type": "string"
+                  },
+                  {
+                  "name": "price_1000",
+                  "type": "double"
+                  },
+                  {
+                  "name": "timestamp",
+                  "type": "long"
+                  }
+                ]
+              }
+output:
+  http_server:
+    allowed_verbs:
+      - GET
+    path: /one
+    stream_path: /sse
+    ws_path: /ws

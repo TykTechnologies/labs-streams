@@ -54,3 +54,4 @@ output:
     path: /instruments
     stream_path: /instruments/stream
     ws_path: /instruments/subscribe
+
