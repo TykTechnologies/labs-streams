@@ -51,7 +51,6 @@ output:
   http_server:
     allowed_verbs:
       - GET
-    path: /instruments
-    stream_path: /instruments/stream
-    ws_path: /instruments/subscribe
-
+    path: /
+    stream_path: /sse
+    ws_path: /ws
