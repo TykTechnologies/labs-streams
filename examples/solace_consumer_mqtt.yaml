@@ -1,0 +1,21 @@
+input:
+  mqtt:
+    connect_timeout: 30s
+    password: tyk-streams
+    topics:
+      - hello
+    urls:
+      - tcp://localhost:1883
+    user: tyk-streams
+output:
+  broker:
+    outputs:
+      - stdout:
+          codec: lines
+      - http_server:
+          allowed_verbs:
+            - GET
+          path: /one
+          stream_path: /sse
+          ws_path: /ws
+    pattern: fan_out

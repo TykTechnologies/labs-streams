@@ -1,0 +1,17 @@
+input:
+  generate:
+    interval: '5s'
+    mapping: 'root = {"test":"message","id":uuid_v4()}'
+output:
+  broker:
+    pattern: fan_out
+    outputs:
+      - stdout:
+          codec: lines
+      - mqtt:
+          connect_timeout: 30s
+          password: tyk-streams
+          topic: hello
+          urls:
+            - tcp://localhost:1883
+          user: tyk-streams
